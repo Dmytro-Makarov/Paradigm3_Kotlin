@@ -27,7 +27,7 @@ data class DFA(
     val isErrorState: (State) -> Boolean
 )
 
-fun dfaStandard(): DFA {
+fun dfaFinalStates(): DFA {
     val dfa = DFA(
         states = setOf(S0, S1, S2, S3),
         inputs = setOf(A, B),
@@ -38,6 +38,9 @@ fun dfaStandard(): DFA {
                     S0 -> S1
                     S1 -> S0
 
+                    S2 -> S2
+                    S3 -> S3
+
                     // Неописаний перехід йде в абстрактний стан помилок
                     else -> S_ERROR
                 }
@@ -46,6 +49,9 @@ fun dfaStandard(): DFA {
                     S0 -> S2
                     S2 -> S0
 
+                    S1 -> S1
+                    S3 -> S3
+
                     else -> S_ERROR
                 }
 
@@ -53,7 +59,7 @@ fun dfaStandard(): DFA {
             }
         },
         initialState = S0,
-        isFinalState = { it == S1 },
+        isFinalState = { it == S1 || it == S2 || it == S3 || it == S0 },
         isErrorState = { it == S_ERROR}
     )
     return dfa

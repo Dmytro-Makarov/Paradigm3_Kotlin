@@ -1,13 +1,9 @@
-import java.lang.Error
 
 /*
  * 16.	(10 балів). Для заданого натурального k виявити,
  * чи допускає скінчений автомат всі можливі слова
  * (виходячи з автоматного алфавіту) довжини k.
  */
-
-val isRecursive = false
-val doBreak = false
 
 fun deltaHatIterative(dfa: DFA, input: List<Input>): State {
     var state = dfa.initialState
@@ -19,52 +15,61 @@ fun deltaHatIterative(dfa: DFA, input: List<Input>): State {
 
 fun deltaHat(dfa: DFA, input: List<Input>) : State = input.fold(dfa.initialState, dfa.delta)
 
-fun main(args: Array<String>) {
-    val dfa = dfa2()
+fun main() {
+    val dfa = dfa3()
     val alphabet = listOf(A, B)
     val wordLength = 5
     println(isAcceptingAllWords(dfa, alphabet, wordLength))
 }
 
 fun isAcceptingAllWords(dfa: DFA, alphabet: List<Input>, kLength: Int) : Boolean {
-    var acceptsEveryWord = true
 
-    val combinations = combinationWithRepetition(kLength, alphabet.size, alphabet.toList()) as List<List<Input>>
+    var acceptsEveryWord = iterateCombinations(dfa,
+        combinationWithRepetition(kLength, alphabet.size, alphabet.toList()))
 
+    if (!acceptsEveryWord)
+        println("DFA DOES NOT ACCEPT EVERY WORD!")
+    else
+        //Перевіримо обернений хід
+        acceptsEveryWord = iterateCombinations(dfa,
+            combinationWithRepetition(kLength, alphabet.size, alphabet.toList().reversed()))
+
+
+    return acceptsEveryWord
+}
+
+fun iterateCombinations(dfa: DFA, combinations : List<List<Input>>,
+                        isRecursive : Boolean = false, doBreak: Boolean = false) : Boolean {
+    var check = true
     for (word in combinations) {
         print("$word: ")
-        var state: State
-        var res = false
 
-        if(!isRecursive)
-            state = deltaHatIterative(dfa, word)
+        val state : State = if(!isRecursive)
+            deltaHatIterative(dfa, word)
         else
-            state = deltaHat(dfa, word)
+            deltaHat(dfa, word)
 
         if (dfa.isErrorState(state)) {
             throw IllegalStateException("The word goes into unknown state")
         }
 
-        res = dfa.isFinalState(state)
+        val res : Boolean = dfa.isFinalState(state)
 
         println(res)
         if (!res) {
-            acceptsEveryWord = false
+            check = false
             if (doBreak) break
         }
-
     }
-    if (!acceptsEveryWord)
-        println("DFA DOES NOT ACCEPT EVERY WORD!")
-    return acceptsEveryWord
+    return check
 }
 
 //Warning: Алгоритм зважає на порядок!
-fun combinationWithRepetition(kLength: Int, inputSize: Int, items: List<*>) : List<List<*>> {
-    fun generate(k: Int, combination: IntArray, res: MutableList<List<*>>): List<List<*>> {
+fun combinationWithRepetition(kLength: Int, inputSize: Int, items: List<Input>) : List<List<Input>> {
+    fun generate(k: Int, combination: IntArray, res: MutableList<List<Input>>): List<List<Input>> {
         if (k >= kLength) {
-            val word = emptyList<Any?>().toMutableList()
-            for (i in 0 until kLength) word.add(items[combination[i]]);
+            val word = emptyList<Input>().toMutableList()
+            for (i in 0 until kLength) word.add(items[combination[i]])
             res.add(word.toList())
         }
         else {
@@ -78,7 +83,7 @@ fun combinationWithRepetition(kLength: Int, inputSize: Int, items: List<*>) : Li
     }
 
     val combination = IntArray(kLength)
-    val res = emptyList<List<*>>().toMutableList()
+    val res = emptyList<List<Input>>().toMutableList()
     generate(0, combination, res)
     //println(res)
     return res
